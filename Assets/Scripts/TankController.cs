@@ -56,7 +56,8 @@ public class TankController : MonoBehaviour
         // apply vector to the rigidbody
         _rb.MovePosition(_rb.position + moveOffset);
         //also move the turret body along
-        turretBody.MovePosition(turretBody.position + moveOffset);
+        //turretBody.MovePosition(turretBody.position + moveOffset); //error: if tank hits obstacle, turret flies away
+        turretBody.transform.position = _rb.transform.position + Vector3.up * .45f;
     }
 
     public void TurnTank()

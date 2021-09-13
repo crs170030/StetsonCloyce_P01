@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
+
 [RequireComponent(typeof(TankController))]
 public class Player : MonoBehaviour
 {
@@ -39,15 +40,7 @@ public class Player : MonoBehaviour
     }
 
     // Update is called once per frame
-    void Update()
-    {
-        /////ESC: Exit the program
-        if (Input.GetKeyDown(KeyCode.Escape))
-        {
-            Debug.Log("Escape was pressed");
-            Application.Quit();
-        }
-    }
+    
     /*
     public void ChangeColor(bool reset, Material glowUp)
     {
