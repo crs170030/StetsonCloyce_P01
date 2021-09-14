@@ -19,15 +19,18 @@ public class BossController : EnemyBase
     [SerializeField] GameObject _location4 = null;
 
     [SerializeField] float normalMoveSpeed = .3f;
+    [SerializeField] float fireRate = 5f;
     int phase = 0; //phase: 0 - move between points, 1 - lunge attack, 2 - spawn minion
     int location;
     bool reachedDestination;
+    float nextTimeToFire;
     Vector3 selectedPoint = new Vector3(0,0,0);
 
     // Start is called before the first frame update
     void Start()
     {
         reachedDestination = true;
+        nextTimeToFire = 2f;
     }
 
     // Update is called once per frame
@@ -36,9 +39,17 @@ public class BossController : EnemyBase
         //phase: 0 - move between points, 1 - lunge attack, 2 - spawn minion
         switch (phase) {
             case 0:
-                if(reachedDestination)
+                if(reachedDestination) //check if we need a new point to move to
                     SelectNewMovement();
-                MoveToPoint(selectedPoint);
+                MoveToPoint(selectedPoint); //move 
+                                            //check if its time to fire gun
+                //if reloadTime is == 0, call shoot script to fire gun
+                if (Time.time >= nextTimeToFire)
+                {
+                    nextTimeToFire = Time.time + fireRate;
+                    //Debug.Log("Distance between enemy and player == " + distance);
+                    FireWeapon();
+                }
                 break;
         }
     }
@@ -48,7 +59,7 @@ public class BossController : EnemyBase
         reachedDestination = false;
         location = (int)Random.Range(1, 5);
         //TODO: Maybe make it to where it doesn't chose a point from 1 cycle before
-        Debug.Log("New Location is " + location);
+        //Debug.Log("New Location is " + location);
 
         switch (location)
         {
@@ -82,5 +93,10 @@ public class BossController : EnemyBase
         {
             reachedDestination = true;
         }
+    }
+
+    void FireWeapon()
+    {
+        Debug.Log("Boss goes pew!");
     }
 }

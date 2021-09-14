@@ -6,9 +6,22 @@ using UnityEngine;
 public class ProjectileBase : MonoBehaviour
 {
     [SerializeField] float _travelSpeed = 2f;
+    [SerializeField] float _damage = 1f;
     [SerializeField] GameObject _impactEffect = null;
     [SerializeField] AudioClip _fireSound = null;
     [SerializeField] AudioClip _impactSound = null;
+
+    protected float Damage
+    {
+        get
+        {
+            return _damage;
+        }
+        set
+        {
+            _damage = value;
+        }
+    }
 
     protected float TravelSpeed {
         get
@@ -45,19 +58,34 @@ public class ProjectileBase : MonoBehaviour
         //_rb.AddForce(moveOffset);
     }
 
-    protected virtual void OnTriggerEnter(Collider other)
+    void OnTriggerEnter(Collider other)
     {
-        Debug.Log("Projectile has hit " + other);
+        //Debug.Log("Projectile has hit " + other);
+        ImpactEffect(other);
+    }
+
+    protected virtual void ImpactEffect(Collider other)
+    {
         Player player = other.gameObject.GetComponent<Player>();
         if (player == null) //if hit anything other than player, explode
         {
-            //make hit effect
-            GameObject impactGO = Instantiate(_impactEffect, transform.position, transform.rotation);
-            Destroy(impactGO, 3f); //eventually destroy
-            //play sounds
-            AudioHelper.PlayClip2D(_impactSound, .5f);
-
-            Destroy(gameObject);//delete itself
+            //call damage function to whatever it hit
+            HealthBase health = other.gameObject.GetComponent<HealthBase>();
+            if (health != null)
+                health.TakeDamage(Damage);
+            //destroy this projectile
+            Explode();
         }
+    }
+
+    protected virtual void Explode()
+    {
+        //make hit effect
+        GameObject impactGO = Instantiate(_impactEffect, transform.position, transform.rotation);
+        Destroy(impactGO, 3f); //eventually destroy
+                               //play sounds
+        AudioHelper.PlayClip2D(_impactSound, .5f);
+
+        Destroy(gameObject);//delete itself
     }
 }
