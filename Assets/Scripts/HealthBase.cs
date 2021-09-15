@@ -5,6 +5,8 @@ using UnityEngine;
 public class HealthBase : MonoBehaviour, IDamageable<float>
 {
     [SerializeField] float maxHealth = 10f;
+    [SerializeField] GameObject _deathEffect = null;
+    [SerializeField] AudioClip _deathSound = null;
     public float currentHealth;
 
     void Start()
@@ -33,6 +35,20 @@ public class HealthBase : MonoBehaviour, IDamageable<float>
     {
         //time to die
         Debug.Log("You've... killed me... The Great " + this.name);
-        Destroy(gameObject, 1f);
+
+        if (_deathEffect != null)
+        {
+            //make hit effect
+            GameObject deathGO = Instantiate(_deathEffect, transform.position, transform.rotation);
+            Destroy(deathGO, 3f); //eventually destroy
+        }
+        if (_deathSound != null)
+        {
+            //play sounds
+            AudioHelper.PlayClip2D(_deathSound, 1f);
+        }
+
+
+        Destroy(gameObject, .2f);
     }
 }

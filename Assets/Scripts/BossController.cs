@@ -17,41 +17,80 @@ public class BossController : EnemyBase
     [SerializeField] GameObject _location2 = null;
     [SerializeField] GameObject _location3 = null;
     [SerializeField] GameObject _location4 = null;
+    [SerializeField] Transform _target = null;
+    [SerializeField] GameObject _mine = null;
+    [SerializeField] GameObject _lazer = null;
 
     [SerializeField] float normalMoveSpeed = .3f;
+    [SerializeField] float angryMoveSpeed = 1f;
     [SerializeField] float fireRate = 5f;
+    [SerializeField] float phaseChangeRate = 6f;
+    [SerializeField] float waitRate = 2f;
+
     int phase = 0; //phase: 0 - move between points, 1 - lunge attack, 2 - spawn minion
     int location;
+    float projLifetime = 5f;
     bool reachedDestination;
+    bool targetAquired, bombReady;
     float nextTimeToFire;
+    float nextTimeToChangeAttack;
+    float nextWakeTime;
     Vector3 selectedPoint = new Vector3(0,0,0);
+    Vector3 targetPosition = new Vector3(0,0,0);
 
     // Start is called before the first frame update
     void Start()
     {
         reachedDestination = true;
+        targetAquired = false;
+        bombReady = false;
         nextTimeToFire = 2f;
+        nextTimeToChangeAttack = 2f;
+        nextWakeTime = 2f;
     }
 
     // Update is called once per frame
     void Update()
     {
-        //phase: 0 - move between points, 1 - lunge attack, 2 - spawn minion
-        switch (phase) {
-            case 0:
-                if(reachedDestination) //check if we need a new point to move to
-                    SelectNewMovement();
-                MoveToPoint(selectedPoint); //move 
-                                            //check if its time to fire gun
-                //if reloadTime is == 0, call shoot script to fire gun
-                if (Time.time >= nextTimeToFire)
-                {
-                    nextTimeToFire = Time.time + fireRate;
-                    //Debug.Log("Distance between enemy and player == " + distance);
-                    FireWeapon();
-                }
-                break;
+        //countdown timer to change phase
+        if (Time.time >= nextTimeToChangeAttack)
+        {
+            //wait another phaseChange seconds + between 1 or 5 seconds
+            nextTimeToChangeAttack = Time.time + phaseChangeRate + Random.Range(1,5);
+            //change phase to random
+            phase = (int)Random.Range(1, 3);
+            
+            Debug.Log("It is a phase. New Phase: " + phase);
         }
+
+        //phase: 0 - move between points, 1 - lunge attack, 2 - spawn minion
+        switch (phase)
+       {
+            case 0:
+               if (reachedDestination) //check if we need a new point to move to
+                   SelectNewMovement();
+               MoveToPoint(selectedPoint, normalMoveSpeed); //move 
+                                                                 //check if its time to fire gun
+                                                            //if reloadTime is == 0, call shoot script to fire gun
+               if (Time.time >= nextTimeToFire)
+               {
+                   nextTimeToFire = Time.time + fireRate;
+                   //Debug.Log("Distance between enemy and player == " + distance);
+                   FireWeapon();
+               }
+               break;
+
+            case 1:
+                LungeAtPlayer();
+               
+               break;
+            case 2: SpawnMine();
+                break;
+           default:
+                phase = 1;
+                break;
+       }
+        
     }
 
     void SelectNewMovement()
@@ -85,11 +124,11 @@ public class BossController : EnemyBase
         }
     }
     
-    void MoveToPoint(Vector3 spot)
+    void MoveToPoint(Vector3 spot, float speed)
     {
         //call when it is time to move.
-        transform.position = Vector3.MoveTowards(transform.position, spot, normalMoveSpeed);
-        if(Vector3.Distance(transform.position, spot) < 5)//if we are close enough, then get a new point to find
+        transform.position = Vector3.MoveTowards(transform.position, spot, speed);
+        if(Vector3.Distance(transform.position, spot) <= 2)//if we are close enough, then get a new point to find
         {
             reachedDestination = true;
         }
@@ -98,5 +137,66 @@ public class BossController : EnemyBase
     void FireWeapon()
     {
         Debug.Log("Boss goes pew!");
+        
+        GameObject lazerGO = Instantiate(_lazer, transform.position, Quaternion.identity);
+        //rotate lazer towards player
+        lazerGO.transform.LookAt(_target);
+        lazerGO.SetActive(true);
+
+        Destroy(lazerGO, projLifetime);
+    }
+
+    void LungeAtPlayer()
+    {
+        //wait a sec before continuing
+        if (Time.time >= nextWakeTime)
+        {
+            if (!targetAquired)
+            { //should run the first cycle of this script
+                Debug.Log("OwO whats, this? *glomps you cutely*");
+                //get player's position
+                targetPosition = _target.position;
+                reachedDestination = false;
+                targetAquired = true;
+
+                //on next cycle, make the boss do nothing for a bit
+                nextWakeTime = Time.time + waitRate;
+            }
+
+            if (reachedDestination) //return to normal steps
+            {
+                Debug.Log("Glomp succ-cessful! Returning to normal.");
+                reachedDestination = false;
+                targetAquired = false;
+                phase = 0;
+                //return();//too much of a headache to not move one more frame after reaching target
+            }
+
+            //lunge at player
+            MoveToPoint(targetPosition, angryMoveSpeed);
+        }
+    }
+
+    void SpawnMine()
+    {
+        if (!bombReady)//if this is the first time, then start the timer
+        {
+            bombReady = true;
+            nextWakeTime = Time.time + waitRate * 2; //wait twice as long to deploy bombs
+        }
+
+        if (Time.time >= nextWakeTime)
+        {
+            Debug.Log("Bombs? It's yours my friend.");
+
+            //spawn a land mine object
+            //make a copy anywhere from x: -22 to 22, y: 20, z: -27 to 10
+            Vector3 minePosition = new Vector3(Random.Range(-22, 22), 20, Random.Range(-27, 10));
+
+            GameObject mineGO = Instantiate(_mine, minePosition, Quaternion.identity);
+            mineGO.SetActive(true);
+            //return to normal phase
+            phase = 0;
+        }
     }
 }

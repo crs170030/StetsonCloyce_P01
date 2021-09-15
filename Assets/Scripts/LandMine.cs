@@ -2,19 +2,24 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class EnemyLazer : ProjectileBase
+public class LandMine : MonoBehaviour
 {
-    protected override void ImpactEffect(Collider other)
+    [SerializeField] float attackDamage = 3f;
+
+    void OnCollisionEnter(Collision other)
     {
+        Debug.Log("Landmine has hit " + other);
+
         Player player = other.gameObject.GetComponent<Player>();
         if (player != null)//we have hit player
         {
             //call damage function to player
             HealthBase health = player.gameObject.GetComponent<HealthBase>();
             if (health != null)
-                health.TakeDamage(Damage);
+                health.TakeDamage(attackDamage);
 
-            Explode();
+            //destroy self
+            GetComponent<Target>().Kill();
         }
     }
 }
