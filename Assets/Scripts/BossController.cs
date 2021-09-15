@@ -8,8 +8,8 @@ public class BossController : EnemyBase
      * Boss Pattern: Have 4 spots it move to.
      * Transform at certain speed to a random spot
      * At a random time, lung at player
-     * Lunge Attack: Boss pick point where player is, starts shaking, then moves to that spot. Resume normal pattern
-     * Innovation: Make minions appear in random spots that chase the player
+     * Lunge Attack: Boss pick point where player is, stops for a moment, then moves to that spot. Resume normal pattern
+     * Innovation: Land mine fall in at random spot on map
      * 
     */
 
@@ -21,6 +21,7 @@ public class BossController : EnemyBase
     [SerializeField] GameObject _mine = null;
     [SerializeField] GameObject _lazer = null;
 
+    [SerializeField] float glompDamage = 1f;
     [SerializeField] float normalMoveSpeed = .3f;
     [SerializeField] float angryMoveSpeed = 1f;
     [SerializeField] float fireRate = 5f;
@@ -60,7 +61,7 @@ public class BossController : EnemyBase
             //change phase to random
             phase = (int)Random.Range(1, 3);
             
-            Debug.Log("It is a phase. New Phase: " + phase);
+            //Debug.Log("It is a phase. New Phase: " + phase);
         }
 
         //phase: 0 - move between points, 1 - lunge attack, 2 - spawn minion
@@ -82,8 +83,8 @@ public class BossController : EnemyBase
 
             case 1:
                 LungeAtPlayer();
-               
-               break;
+                nextTimeToFire = Time.time + fireRate; //reset time to fire
+                break;
             case 2: SpawnMine();
                 break;
            default:
@@ -136,7 +137,7 @@ public class BossController : EnemyBase
 
     void FireWeapon()
     {
-        Debug.Log("Boss goes pew!");
+        //Debug.Log("Boss goes pew!");
         
         GameObject lazerGO = Instantiate(_lazer, transform.position, Quaternion.identity);
         //rotate lazer towards player
@@ -153,7 +154,7 @@ public class BossController : EnemyBase
         {
             if (!targetAquired)
             { //should run the first cycle of this script
-                Debug.Log("OwO whats, this? *glomps you cutely*");
+                //Debug.Log("OwO whats, this? *glomps you cutely*");
                 //get player's position
                 targetPosition = _target.position;
                 reachedDestination = false;
@@ -165,7 +166,7 @@ public class BossController : EnemyBase
 
             if (reachedDestination) //return to normal steps
             {
-                Debug.Log("Glomp succ-cessful! Returning to normal.");
+                //Debug.Log("Glomp succ-cessful! Returning to normal.");
                 reachedDestination = false;
                 targetAquired = false;
                 phase = 0;
@@ -182,12 +183,12 @@ public class BossController : EnemyBase
         if (!bombReady)//if this is the first time, then start the timer
         {
             bombReady = true;
-            nextWakeTime = Time.time + waitRate * 2; //wait twice as long to deploy bombs
+            nextWakeTime = Time.time + waitRate * .5f; //wait half as long to deploy bombs
         }
 
         if (Time.time >= nextWakeTime)
         {
-            Debug.Log("Bombs? It's yours my friend.");
+            //Debug.Log("Bombs? It's yours my friend.");
 
             //spawn a land mine object
             //make a copy anywhere from x: -22 to 22, y: 20, z: -27 to 10
@@ -197,6 +198,21 @@ public class BossController : EnemyBase
             mineGO.SetActive(true);
             //return to normal phase
             phase = 0;
+        }
+    }
+
+    void OnCollisionEnter(Collision other)
+    {
+        Player player = other.gameObject.GetComponent<Player>();
+        if (player != null)//we have hit player
+        {
+            Debug.Log("Boss has hit " + other);
+            //call damage function to player
+            HealthBase health = player.gameObject.GetComponent<HealthBase>();
+            if (health != null)
+                health.TakeDamage(glompDamage);
+            //make the boss not lunge anymore (if player runs into it, then boss runs away)
+            reachedDestination = true;
         }
     }
 }

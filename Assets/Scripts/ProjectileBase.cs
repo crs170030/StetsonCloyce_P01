@@ -80,11 +80,15 @@ public class ProjectileBase : MonoBehaviour
 
     protected virtual void Explode()
     {
-        //make hit effect
-        GameObject impactGO = Instantiate(_impactEffect, transform.position, transform.rotation);
-        Destroy(impactGO, 3f); //eventually destroy
-                               //play sounds
-        AudioHelper.PlayClip2D(_impactSound, .5f);
+        if (_impactEffect != null)
+        {
+            //make hit effect
+            GameObject impactGO = Instantiate(_impactEffect, transform.position, transform.rotation);
+            Destroy(impactGO, 3f); //eventually destroy
+        }
+        //play sounds
+        if(_impactSound != null)
+            AudioHelper.PlayClip2D(_impactSound, .5f);
 
         Destroy(gameObject);//delete itself
     }

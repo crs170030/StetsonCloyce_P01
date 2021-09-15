@@ -15,19 +15,26 @@ public class TankController : MonoBehaviour
     [SerializeField] float projLifetime = 20f;
 
     [SerializeField] float _maxSpeed = .25f;
+    [SerializeField] float _fireRate = 1f;
     public float MaxSpeed
     {
         get => _maxSpeed;
         set => _maxSpeed = value;
     }
 
+    float nextTimeToFire = 0;
+    bool needToRotate = false;
+    float maxTilt = .1f;
     Rigidbody _rb = null;
     Vector3 projectilePosition;
     Vector3 pointToLook;
+    Vector3 m_EulerAngleVelocity;
 
     private void Awake()
     {
         _rb = GetComponent<Rigidbody>();
+
+        m_EulerAngleVelocity = new Vector3(0, 0, 0);
     }
 
     private void FixedUpdate()
@@ -39,11 +46,28 @@ public class TankController : MonoBehaviour
 
     private void Update()
     {
-        //check if the player has a button pressed, and fire gun if so
+        //SPACE BAR: Fire a gun (all we need is somebody to lean on)
         if (Input.GetKeyDown(KeyCode.Space))
         {
-            //Debug.Log("FIRE ZE MISSLES!");
-            FireGun();
+            if (Time.time >= nextTimeToFire)
+            {
+                //Debug.Log("FIRE ZE MISSLES!");
+                nextTimeToFire = Time.time + _fireRate;
+                FireGun();
+            }
+        }
+
+        //TODO: Maybe make the tank slowly rotate instead of teleporting
+        //R: Re-orientate tank to be right side up
+        if (Input.GetKeyDown(KeyCode.R))
+        {
+            needToRotate = true;
+            Debug.Log("Starting to rotate...");
+        }
+
+        if (needToRotate)
+        {
+            Reorientate(); //keep calling until upright
         }
     }
 
@@ -85,6 +109,7 @@ public class TankController : MonoBehaviour
         }   
 
         //manually check if turret is turned at a bad angle!
+        //we ignore this for now, lol
         if(turretBody.rotation.x > 0)
         {
             //if x angle is positive, the turret aims at the ground!
@@ -95,9 +120,6 @@ public class TankController : MonoBehaviour
 
     public void FireGun()
     {
-        //TODO: * Make the missile have a time to fire so you can't spam it
-        //      * 
-
         projectilePosition = firePoint.transform.position;
 
         //create projectile clone at turret
@@ -113,5 +135,22 @@ public class TankController : MonoBehaviour
 
         //destroy projectile after x seconds
         Destroy(lazerGO, projLifetime);
+    }
+
+    void Reorientate()
+    {
+        //if tilt of x or z < maxTilt, then we return to main update
+        if (Mathf.Abs(transform.rotation.x) < maxTilt && Mathf.Abs(transform.rotation.z) < maxTilt)
+        {
+            needToRotate = false;
+            Debug.Log("Ending Rotation! Shout-out to simpleflips");
+        }
+
+        //try to make the velocity negative of the current rotation
+        m_EulerAngleVelocity = new Vector3(transform.rotation.x * -100, 0, transform.rotation.z * -100);
+        //Debug.Log("euler angle = " + m_EulerAngleVelocity);
+
+        Quaternion deltaRotation = Quaternion.Euler(m_EulerAngleVelocity * Time.fixedDeltaTime);
+        _rb.MoveRotation(_rb.rotation * deltaRotation);
     }
 }
