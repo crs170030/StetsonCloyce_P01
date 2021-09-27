@@ -2891,8 +2891,8 @@ MonoBehaviour:
   _mine: {fileID: 1884449941}
   _lazer: {fileID: 4132463242963124589}
   glompDamage: 1
-  normalMoveSpeed: 0.05
-  angryMoveSpeed: 0.1
+  normalMoveSpeed: 0.15
+  angryMoveSpeed: 0.3
   fireRate: 3
   phaseChangeRate: 4
   waitRate: 1

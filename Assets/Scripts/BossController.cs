@@ -59,7 +59,7 @@ public class BossController : EnemyBase
     }
 
     // Update is called once per frame
-    void Update()
+    void FixedUpdate()
     {
         //countdown timer to change phase
         if (Time.time >= nextTimeToChangeAttack)
@@ -139,7 +139,7 @@ public class BossController : EnemyBase
     {
         //call when it is time to move.
         transform.position = Vector3.MoveTowards(transform.position, spot, speed);
-        if(Vector3.Distance(transform.position, spot) <= 2)//if we are close enough, then get a new point to find
+        if(Vector3.Distance(transform.position, spot) <= 4)//if we are close enough, then get a new point to find
         {
             reachedDestination = true;
         }
@@ -151,7 +151,8 @@ public class BossController : EnemyBase
         
         GameObject lazerGO = Instantiate(_lazer, transform.position, Quaternion.identity);
         //rotate lazer towards player
-        lazerGO.transform.LookAt(_target);
+        if(_target != null)
+            lazerGO.transform.LookAt(_target);
         lazerGO.SetActive(true);
 
         Destroy(lazerGO, projLifetime);
@@ -166,7 +167,8 @@ public class BossController : EnemyBase
             { //should run the first cycle of this script
                 //Debug.Log("OwO whats, this? *glomps you cutely*");
                 //get player's position
-                targetPosition = _target.position;
+                if(_target != null)
+                    targetPosition = _target.position;
                 reachedDestination = false;
                 targetAquired = true;
 
@@ -196,7 +198,7 @@ public class BossController : EnemyBase
             nextWakeTime = Time.time + waitRate * .5f; //wait half as long to deploy bombs
         }
 
-        transform.Rotate(0, 5f, 0, Space.Self);//spin boss around
+        transform.Rotate(0, 15f, 0, Space.Self);//spin boss around
 
         if (Time.time >= nextWakeTime)
         {
@@ -248,13 +250,13 @@ public class BossController : EnemyBase
     {
         phase = 3;
         //set x rotation to -100 to face down
-        transform.Rotate(-120f, 0, 0, Space.Self);
+        transform.Rotate(-160f, 0, 0, Space.Self);
     }
 
     public void ChangeForm()
     {
         //hopefully rotate back
-        transform.Rotate(120f, 0, 0, Space.Self);
+        transform.Rotate(160f, 0, 0, Space.Self);
         _normalArt.SetActive(false);
         _angryArt.SetActive(true);
     }
