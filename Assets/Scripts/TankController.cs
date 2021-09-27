@@ -62,7 +62,7 @@ public class TankController : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.R))
         {
             needToRotate = true;
-            Debug.Log("Starting to rotate...");
+            //Debug.Log("Starting to rotate...");
         }
 
         if (needToRotate)
@@ -143,7 +143,7 @@ public class TankController : MonoBehaviour
         if (Mathf.Abs(transform.rotation.x) < maxTilt && Mathf.Abs(transform.rotation.z) < maxTilt)
         {
             needToRotate = false;
-            Debug.Log("Ending Rotation! Shout-out to simpleflips");
+            //Debug.Log("Ending Rotation! Shout-out to simpleflips");
         }
 
         //try to make the velocity negative of the current rotation

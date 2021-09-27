@@ -1,6 +1,8 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System;
 using UnityEngine;
+using UnityEngine.Events;
 
 public class HealthBase : MonoBehaviour, IDamageable<float>
 {
@@ -12,6 +14,9 @@ public class HealthBase : MonoBehaviour, IDamageable<float>
     public float currentHealth;
     int repeatNum = 5;
 
+    public event Action<float> Damaged = delegate { };
+    public event Action<float> Healed = delegate { };
+
     void Start()
     {
         restoreHealth();
@@ -20,14 +25,17 @@ public class HealthBase : MonoBehaviour, IDamageable<float>
     public void restoreHealth()
     {
         currentHealth = maxHealth;
+        Healed.Invoke(maxHealth);
     }
 
     public virtual void TakeDamage(float damageTaken)
     {
         //ouch chihuahua
+        //OnTakeDamage?.Invoke();
+        Damaged.Invoke(damageTaken);
 
         currentHealth -= damageTaken;
-        Debug.Log(this.name + " was hit! Health is now " + currentHealth);
+        //Debug.Log(this.name + " was hit! Health is now " + currentHealth);
         //flash art group
         if (_artGroup != null)
             StartCoroutine(flashArt(_artGroup));
@@ -46,7 +54,7 @@ public class HealthBase : MonoBehaviour, IDamageable<float>
     public void Kill()
     {
         //time to die
-        Debug.Log("You've... killed me... The Great " + this.name);
+        //Debug.Log("You've... killed me... The Great " + this.name);
 
         if (_deathEffect != null)
         {
