@@ -13,9 +13,12 @@ public class HealthBase : MonoBehaviour, IDamageable<float>
     [SerializeField] AudioClip _hurtSound = null;
     public float currentHealth;
     int repeatNum = 5;
+    bool calledHalfHealth = false;
+    public bool flashActive = true;
 
     public event Action<float> Damaged = delegate { };
     public event Action<float> Healed = delegate { };
+    public event Action<int> HalfHealth = delegate { };
 
     void Start()
     {
@@ -28,6 +31,11 @@ public class HealthBase : MonoBehaviour, IDamageable<float>
         Healed.Invoke(maxHealth);
     }
 
+    public void AtHalfHeath()
+    {
+        HalfHealth?.Invoke(1);
+    }
+
     public virtual void TakeDamage(float damageTaken)
     {
         //ouch chihuahua
@@ -35,6 +43,11 @@ public class HealthBase : MonoBehaviour, IDamageable<float>
         Damaged.Invoke(damageTaken);
 
         currentHealth -= damageTaken;
+        if (currentHealth <= (maxHealth / 2) && !calledHalfHealth)//call half health warnings
+        {
+            AtHalfHeath();
+            calledHalfHealth = true;
+        }
         //Debug.Log(this.name + " was hit! Health is now " + currentHealth);
         //flash art group
         if (_artGroup != null)
@@ -47,7 +60,7 @@ public class HealthBase : MonoBehaviour, IDamageable<float>
         else
         {
             if (_hurtSound != null)
-                AudioHelper.PlayClip2D(_hurtSound, 1f);
+                AudioHelper.PlayClip2D(_hurtSound, .7f);
         }
     }
 
@@ -70,14 +83,19 @@ public class HealthBase : MonoBehaviour, IDamageable<float>
 
         Destroy(gameObject, .2f);
     }
+
     private IEnumerator flashArt(GameObject artGroup)
     {
-        //Debug.Log("Starting flash");
-        for (int i = 0; i < repeatNum; i++) { 
-            artGroup.SetActive(false);
-            yield return new WaitForSeconds(.05f);
-            artGroup.SetActive(true);
-            yield return new WaitForSeconds(.1f);
+        if (flashActive)
+        {
+            //Debug.Log("Starting flash");
+            for (int i = 0; i < repeatNum; i++)
+            {
+                artGroup.SetActive(false);
+                yield return new WaitForSeconds(.05f);
+                artGroup.SetActive(true);
+                yield return new WaitForSeconds(.1f);
+            }
         }
     }
 }

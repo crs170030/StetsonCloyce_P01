@@ -17,6 +17,9 @@ public class BossController : EnemyBase
     [SerializeField] GameObject _location2 = null;
     [SerializeField] GameObject _location3 = null;
     [SerializeField] GameObject _location4 = null;
+    [SerializeField] GameObject _normalArt = null;
+    [SerializeField] GameObject _angryArt = null;
+    [SerializeField] Renderer _body = null;
     [SerializeField] Transform _target = null;
     [SerializeField] GameObject _mine = null;
     [SerializeField] GameObject _lazer = null;
@@ -38,6 +41,7 @@ public class BossController : EnemyBase
     float nextWakeTime;
     Vector3 selectedPoint = new Vector3(0,0,0);
     Vector3 targetPosition = new Vector3(0,0,0);
+    Material bodyMaterial;
 
     // Start is called before the first frame update
     void Start()
@@ -48,6 +52,10 @@ public class BossController : EnemyBase
         nextTimeToFire = 2f;
         nextTimeToChangeAttack = 2f;
         nextWakeTime = 2f;
+        _normalArt.SetActive(true);
+        _angryArt.SetActive(false);
+
+        bodyMaterial = _body.material;
     }
 
     // Update is called once per frame
@@ -61,10 +69,10 @@ public class BossController : EnemyBase
             //change phase to random
             phase = (int)Random.Range(1, 3);
             
-            //Debug.Log("It is a phase. New Phase: " + phase);
+            //Debug.Log("It is a phase, mom. New Phase: " + phase);
         }
 
-        //phase: 0 - move between points, 1 - lunge attack, 2 - spawn minion
+        //phase: 0 - move between points, 1 - lunge attack, 2 - spawn minion, 3 - cutscene
         switch (phase)
        {
             case 0:
@@ -87,8 +95,10 @@ public class BossController : EnemyBase
                 break;
             case 2: SpawnMine();
                 break;
+            case 3: //do nothing :>
+                break;
            default:
-                phase = 1;
+                phase = 0;
                 break;
        }
         
@@ -186,6 +196,8 @@ public class BossController : EnemyBase
             nextWakeTime = Time.time + waitRate * .5f; //wait half as long to deploy bombs
         }
 
+        transform.Rotate(0, 5f, 0, Space.Self);//spin boss around
+
         if (Time.time >= nextWakeTime)
         {
             //Debug.Log("Bombs? It's yours my friend.");
@@ -197,6 +209,8 @@ public class BossController : EnemyBase
             GameObject mineGO = Instantiate(_mine, minePosition, Quaternion.identity);
             mineGO.SetActive(true);
             //return to normal phase
+            bombReady = false;
+            transform.rotation = Quaternion.Euler(0,0,0);//rotate back to front
             phase = 0;
         }
     }
@@ -214,5 +228,45 @@ public class BossController : EnemyBase
             //make the boss not lunge anymore (if player runs into it, then boss runs away)
             reachedDestination = true;
         }
+    }
+
+    public void AngryTime()
+    {
+        //call when the boss health is low
+        //double the speed and half the wait times!
+        normalMoveSpeed *= 2f;  //.3f
+        angryMoveSpeed *= 2f;    //1f
+        fireRate /= 2f;          //5f
+        phaseChangeRate /= 2f;   //6f
+        waitRate /= 2f;          //2f
+
+        //return to normal attack pattern
+        phase = 0;
+    }
+
+    public void TurnAround()
+    {
+        phase = 3;
+        //set x rotation to -100 to face down
+        transform.Rotate(-120f, 0, 0, Space.Self);
+    }
+
+    public void ChangeForm()
+    {
+        //hopefully rotate back
+        transform.Rotate(120f, 0, 0, Space.Self);
+        _normalArt.SetActive(false);
+        _angryArt.SetActive(true);
+    }
+
+    IEnumerator ChangeColor() //DOESN'T WORK!!! AAAAAAHHH
+    {
+        //_body.material.SetColor("_Color", Color.yellow);
+        bodyMaterial.color = Color.yellow;
+        
+        yield return new WaitForSeconds(1f);
+
+        //_body.material.SetColor("_Color", Color.red);
+        bodyMaterial.color = Color.red;
     }
 }
